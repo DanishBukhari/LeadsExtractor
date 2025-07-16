@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "csv-parser": "^3.2.0",
     "csv-writer": "^1.6.0",
     "fs": "^0.0.1-security",
     "nodemailer": "^7.0.5",
