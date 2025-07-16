@@ -454,101 +454,101 @@ class GoogleMapsPuppeteerScraper {
     }
   }
 
-  async sendBulkEmails(leads, emailConfig) {
-    if (!leads || leads.length === 0) {
-      console.log("No leads to email.");
-      return { successCount: 0, failCount: 0 };
-    }
+  // async sendBulkEmails(leads, emailConfig) {
+  //   if (!leads || leads.length === 0) {
+  //     console.log("No leads to email.");
+  //     return { successCount: 0, failCount: 0 };
+  //   }
 
-    // Validate email config
-    if (
-      !emailConfig ||
-      !emailConfig.smtp ||
-      !emailConfig.from ||
-      !emailConfig.subject ||
-      !emailConfig.body
-    ) {
-      throw new Error("Invalid email configuration");
-    }
+  //   // Validate email config
+  //   if (
+  //     !emailConfig ||
+  //     !emailConfig.smtp ||
+  //     !emailConfig.from ||
+  //     !emailConfig.subject ||
+  //     !emailConfig.body
+  //   ) {
+  //     throw new Error("Invalid email configuration");
+  //   }
 
-    // Filter valid emails
-    const validLeads = leads.filter(
-      (lead) =>
-        lead.email &&
-        !["Not found", "No website", "Error"].includes(lead.email) &&
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lead.email),
-    );
+  //   // Filter valid emails
+  //   const validLeads = leads.filter(
+  //     (lead) =>
+  //       lead.email &&
+  //       !["Not found", "No website", "Error"].includes(lead.email) &&
+  //       /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lead.email),
+  //   );
 
-    if (validLeads.length === 0) {
-      console.log("No valid email addresses found.");
-      return { successCount: 0, failCount: 0 };
-    }
+  //   if (validLeads.length === 0) {
+  //     console.log("No valid email addresses found.");
+  //     return { successCount: 0, failCount: 0 };
+  //   }
 
-    console.log(`Preparing to send emails to ${validLeads.length} leads...`);
+  //   console.log(`Preparing to send emails to ${validLeads.length} leads...`);
 
-    const transporter = nodemailer.createTransport({
-      host: emailConfig.smtp.host,
-      port: emailConfig.smtp.port,
-      secure: emailConfig.smtp.secure,
-      auth: {
-        user: emailConfig.smtp.user,
-        pass: emailConfig.smtp.password,
-      },
-    });
+  //   const transporter = nodemailer.createTransport({
+  //     host: emailConfig.smtp.host,
+  //     port: emailConfig.smtp.port,
+  //     secure: emailConfig.smtp.secure,
+  //     auth: {
+  //       user: emailConfig.smtp.user,
+  //       pass: emailConfig.smtp.password,
+  //     },
+  //   });
 
-    let successCount = 0;
-    let failCount = 0;
-    const failedEmails = [];
+  //   let successCount = 0;
+  //   let failCount = 0;
+  //   const failedEmails = [];
 
-    for (const [index, lead] of validLeads.entries()) {
-      try {
-        // Personalize email content
-        const personalizedBody = emailConfig.body
-          .replace(/{{\s*name\s*}}/gi, lead.name || "")
-          .replace(/{{\s*business\s*}}/gi, lead.name || "")
-          .replace(/{{\s*city\s*}}/gi, lead.city || "")
-          .replace(/{{\s*address\s*}}/gi, lead.address || "");
+  //   for (const [index, lead] of validLeads.entries()) {
+  //     try {
+  //       // Personalize email content
+  //       const personalizedBody = emailConfig.body
+  //         .replace(/{{\s*name\s*}}/gi, lead.name || "")
+  //         .replace(/{{\s*business\s*}}/gi, lead.name || "")
+  //         .replace(/{{\s*city\s*}}/gi, lead.city || "")
+  //         .replace(/{{\s*address\s*}}/gi, lead.address || "");
 
-        const personalizedSubject = emailConfig.subject
-          .replace(/{{\s*name\s*}}/gi, lead.name || "")
-          .replace(/{{\s*business\s*}}/gi, lead.name || "")
-          .replace(/{{\s*city\s*}}/gi, lead.city || "");
+  //       const personalizedSubject = emailConfig.subject
+  //         .replace(/{{\s*name\s*}}/gi, lead.name || "")
+  //         .replace(/{{\s*business\s*}}/gi, lead.name || "")
+  //         .replace(/{{\s*city\s*}}/gi, lead.city || "");
 
-        const mailOptions = {
-          from: emailConfig.from,
-          to: lead.email,
-          subject: personalizedSubject,
-          html: personalizedBody,
-          text: personalizedBody.replace(/<[^>]+>/g, ""), // Plain text version
-        };
+  //       const mailOptions = {
+  //         from: emailConfig.from,
+  //         to: lead.email,
+  //         subject: personalizedSubject,
+  //         html: personalizedBody,
+  //         text: personalizedBody.replace(/<[^>]+>/g, ""), // Plain text version
+  //       };
 
-        // Send email
-        await transporter.sendMail(mailOptions);
-        console.log(
-          `✓ Email sent to ${lead.email} (${index + 1}/${validLeads.length})`,
-        );
-        successCount++;
+  //       // Send email
+  //       await transporter.sendMail(mailOptions);
+  //       console.log(
+  //         `✓ Email sent to ${lead.email} (${index + 1}/${validLeads.length})`,
+  //       );
+  //       successCount++;
 
-        // Random delay to avoid being flagged as spam
-        await sleep(2000 + Math.random() * 3000);
-      } catch (err) {
-        console.error(`✗ Failed to send to ${lead.email}: ${err.message}`);
-        failCount++;
-        failedEmails.push(lead.email);
-      }
-    }
+  //       // Random delay to avoid being flagged as spam
+  //       await sleep(2000 + Math.random() * 3000);
+  //     } catch (err) {
+  //       console.error(`✗ Failed to send to ${lead.email}: ${err.message}`);
+  //       failCount++;
+  //       failedEmails.push(lead.email);
+  //     }
+  //   }
 
-    // Save failed emails for reference
-    if (failedEmails.length > 0) {
-      const failedFile = `failed_emails_${Date.now()}.txt`;
-      fs.writeFileSync(failedFile, failedEmails.join("\n"));
-      console.log(
-        `Saved ${failedEmails.length} failed emails to ${failedFile}`,
-      );
-    }
+  //   // Save failed emails for reference
+  //   if (failedEmails.length > 0) {
+  //     const failedFile = `failed_emails_${Date.now()}.txt`;
+  //     fs.writeFileSync(failedFile, failedEmails.join("\n"));
+  //     console.log(
+  //       `Saved ${failedEmails.length} failed emails to ${failedFile}`,
+  //     );
+  //   }
 
-    return { successCount, failCount };
-  }
+  //   return { successCount, failCount };
+  // }
 
   async close() {
     if (this.browser) {
@@ -619,52 +619,52 @@ async function main() {
       console.log(`\nEmails found: ${validEmails}/${results.length}`);
 
       // Email automation
-      if (validEmails > 0) {
-        const sendEmails =
-          (
-            await ask("\nSend emails to collected leads? (y/n): ")
-          ).toLowerCase() === "y";
-        if (sendEmails) {
-          console.log("\n=== Email Configuration ===");
+      // if (validEmails > 0) {
+      //   const sendEmails =
+      //     (
+      //       await ask("\nSend emails to collected leads? (y/n): ")
+      //     ).toLowerCase() === "y";
+      //   if (sendEmails) {
+      //     console.log("\n=== Email Configuration ===");
 
-          const emailConfig = {
-            smtp: {
-              host: await ask("SMTP Host: "),
-              port: parseInt(await ask("SMTP Port: ")),
-              secure: (await ask("Use SSL/TLS? (y/n): ")).toLowerCase() === "y",
-              user: await ask("SMTP Username: "),
-              password: await ask("SMTP Password: "),
-            },
-            from: await ask("From Email: "),
-            subject: await ask("Email Subject: "),
-            body: await ask(
-              "Email Body (HTML supported, use {{name}}, {{business}}, {{city}} for personalization):\n",
-            ),
-          };
+      //     const emailConfig = {
+      //       smtp: {
+      //         host: await ask("SMTP Host: "),
+      //         port: parseInt(await ask("SMTP Port: ")),
+      //         secure: (await ask("Use SSL/TLS? (y/n): ")).toLowerCase() === "y",
+      //         user: await ask("SMTP Username: "),
+      //         password: await ask("SMTP Password: "),
+      //       },
+      //       from: await ask("From Email: "),
+      //       subject: await ask("Email Subject: "),
+      //       body: await ask(
+      //         "Email Body (HTML supported, use {{name}}, {{business}}, {{city}} for personalization):\n",
+      //       ),
+      //     };
 
-          console.log("\n=== Sending Emails ===");
-          const { successCount, failCount } = await scraper.sendBulkEmails(
-            results,
-            emailConfig,
-          );
+      //     // console.log("\n=== Sending Emails ===");
+      //     // // const { successCount, failCount } = await scraper.sendBulkEmails(
+      //     // //   results,
+      //     // //   emailConfig,
+      //     // // );
 
-          console.log("\n=== Email Report ===");
-          console.log(`✓ Successfully sent: ${successCount}`);
-          console.log(`✗ Failed to send: ${failCount}`);
+      //     // console.log("\n=== Email Report ===");
+      //     // console.log(`✓ Successfully sent: ${successCount}`);
+      //     // console.log(`✗ Failed to send: ${failCount}`);
 
-          if (successCount > 0) {
-            console.log("\nTips for better deliverability:");
-            console.log("- Check your spam folder for test emails");
-            console.log(
-              "- Warm up your email account by sending small batches first",
-            );
-            console.log("- Use a professional email domain (not @gmail.com)");
-            console.log("- Include unsubscribe link in your emails");
-          }
-        }
-      } else {
-        console.log("No valid emails found to send messages.");
-      }
+      //     // if (successCount > 0) {
+      //     //   console.log("\nTips for better deliverability:");
+      //     //   console.log("- Check your spam folder for test emails");
+      //     //   console.log(
+      //     //     "- Warm up your email account by sending small batches first",
+      //     //   );
+      //     //   console.log("- Use a professional email domain (not @gmail.com)");
+      //     //   console.log("- Include unsubscribe link in your emails");
+      //     // }
+      //   }
+      // } else {
+      //   console.log("No valid emails found to send messages.");
+      // }
     } else {
       console.log("\nNo leads found. Possible reasons:");
       console.log("- Google Maps structure changed");
@@ -693,3 +693,5 @@ process.on("SIGTERM", () => {
 });
 
 main().catch(console.error);
+
+export default GoogleMapsPuppeteerScraper;
