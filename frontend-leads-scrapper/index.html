@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps Lead Scraper</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, sans-serif;
+            background-color: #f4f7fa;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        form {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        input[type="text"], input[type="number"], input[type="password"], input[type="email"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 150px;
+        }
+        button {
+            background-color: #4a90e2;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        #loading, #statusMessage {
+            font-size: 18px;
+            color: #666;
+            margin: 20px 0;
+            text-align: center;
+        }
+        #results {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #eee;
+            text-align: left;
+        }
+        th {
+            background-color: #f8fafc;
+            font-weight: bold;
+        }
+        a.download-link {
+            display: inline-block;
+            margin-right: 15px;
+            color: #4a90e2;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        a.download-link:hover {
+            text-decoration: underline;
+        }
+        .hidden {
+            display: none;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        #clearStorage {
+            background-color: #e74c3c;
+            margin-top: 10px;
+        }
+        #clearStorage:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <h1>Google Maps Lead Scraper</h1>
+    
+    <form id="scrapeForm">
+        <label for="niche">Business Niche/Category:</label>
+        <input type="text" id="niche" placeholder="e.g., restaurants" required>
+        
+        <label for="region">Region (Town/City/State):</label>
+        <input type="text" id="region" placeholder="e.g., New York, NY" required>
+        
+        <label for="maxResults">Max Results (0 for Unlimited):</label>
+        <input type="number" id="maxResults" value="10" min="0">
+        
+        <div class="checkbox-label">
+            <input type="checkbox" id="headless" checked>
+            <label for="headless">Run in Headless Mode (no browser window)</label>
+        </div>
+        
+        <div class="checkbox-label">
+            <input type="checkbox" id="enableSocial" >
+            <label for="enableSocial">Scrape Social Media for Additional Emails (slower, but may find more emails)</label>
+        </div>
+        
+        <button type="submit">Start Scraping</button>
+    </form>
+    
+    <div id="loading" class="hidden">Scraping in progress... Please wait (this may take several minutes for large results).</div>
+    
+    <div id="results" class="hidden">
+        <h2>Scraped Leads</h2>
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>Business Name</th>
+                    <th>Phone Number</th>
+                    <th>Email</th>
+                    <th>City</th>
+                    <th>Address</th>
+                    <th>Reviews</th>
+                    <th>Website</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <a id="downloadCsv" class="download-link" href="#" download="leads.csv">Download CSV</a>
+        <a id="downloadXlsx" class="download-link" href="#" download="leads.xlsx">Download Excel (XLSX)</a>
+        <button id="clearStorage">Clear Stored Data</button>
+    </div>
+    
+    <form id="emailForm" class="hidden">
+        <h2>Send Bulk Emails</h2>
+        <p>Use placeholders like {{businessName}}, {{city}}, {{address}} in the subject and body for personalization.</p>
+        
+        <label for="subject">Email Subject:</label>
+        <input type="text" id="subject" value="Your Competitors Are Using AI — Are You? Let’s Get You Ahead" required>
+        
+        <label for="body">Email Body (HTML supported):</label>
+        <textarea id="body" required><p style="font-family: Arial, sans-serif; color: #333;">👋 Hi there, I’m Donna Rogers from <strong>Everything AI, LLC</strong> — Your Growth Partner in the Digital World.</p>
+
+<p style="font-family: Arial, sans-serif; color: #333;">At Everything AI, we specialize in helping businesses like yours grow smarter and faster using cutting-edge digital strategies and powerful AI-driven solutions.</p>
+
+<p style="font-family: Arial, sans-serif; color: #333;">We’re not just another marketing agency — we’re your all-in-one partner for digital growth, automation, and business optimization.</p>
+
+<p style="font-family: Arial, sans-serif; color: #333;"><strong>✓ Our Expert Services Include:</strong></p>
+
+<ul style="font-family: Arial, sans-serif; color: #333;">
+    <li>AI Solutions: Chatbots, Voice Assistants, Automated Workflows & more</li>
+    <li>Website Design & Development (Modern, responsive, and lead-driven)</li>
+    <li>SEO, GEO, AEO & Google Ads (Get found where it matters)</li>
+    <li>Social Media Marketing (Engage and convert your audience)</li>
+    <li>CRM Development & Management (Streamline your customer journey)</li>
+    <li>Reputation & Review Management</li>
+    <li>Calendar Booking & Appointment Automation</li>
+    <li>Branding & Graphic Design</li>
+    <li>Business Funding & Consultation</li>
+    <li>Credit Repair & Legal Services</li>
+</ul>
+
+<p style="font-family: Arial, sans-serif; color: #333;"><strong>🎯 Want to know how your business stacks up?</strong><br>
+Get a <strong>FREE and Quick Analysis</strong> of your business, website, and social media — we’ll show you how to attract more leads and strengthen both your online and physical presence.</p>
+
+<p style="font-family: Arial, sans-serif; color: #333;"><strong>📞 Let’s Talk:</strong></p>
+
+<p style="font-family: Arial, sans-serif; color: #333;">
+    📱  +1 856-485-5110 | +1 530-999-7604<br>
+    📧 info@everythingainow.com<br>
+    🌐 <a href="https://www.everythingainow.com" style="color: #4a90e2;">www.everythingainow.com</a>
+</p>
+
+<p style="font-family: Arial, sans-serif; color: #333;"><strong>💬 Free Consultation & Audit Available</strong></p>
+
+<p style="font-family: Arial, sans-serif; color: #333;">Let’s grow your business together,<br>
+– Donna Rogers<br>
+<strong>Everything AI, LLC</strong></p></textarea>
+        
+        <button type="submit">Send Emails</button>
+    </form>
+    
+    <div id="statusMessage" class="hidden"></div>
+    
+    <script>
+        const apiBase = 'http://localhost:5000';
+        let scrapedLeads = [];
+
+        // Function to populate table and set downloads
+        function populateResults(leads) {
+            const tbody = document.querySelector('#resultsTable tbody');
+            tbody.innerHTML = '';
+            leads.forEach(lead => {
+                if (lead.email && lead.email !== 'Not found' && lead.email !== 'Error') {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${lead.name || 'N/A'}</td>
+                        <td>${lead.phone || 'N/A'}</td>
+                        <td>${lead.email || 'N/A'}</td>
+                        <td>${lead.city || 'N/A'}</td>
+                        <td>${lead.address || 'N/A'}</td>
+                        <td>${lead.rating || 'N/A'}</td>
+                        <td>${lead.website || 'N/A'}</td>
+                    `;
+                    tbody.appendChild(row);
+                }
+            });
+
+            // Generate CSV blob
+            const header = 'BUSINESS_NAME,PHONE,EMAIL,CITY,ADDRESS,REVIEWS,WEBSITE\n';
+            const csvContent = header + leads.map(lead => `${lead.name || ''},${lead.phone || ''},${lead.email || ''},${lead.city || ''},${lead.address || ''},${lead.rating || ''},${lead.website || ''}`).join('\n');
+            const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            document.getElementById('downloadCsv').href = URL.createObjectURL(csvBlob);
+
+            // Generate XLSX blob
+            const ws = XLSX.utils.json_to_sheet(leads);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+            function s2ab(s) {
+                const buf = new ArrayBuffer(s.length);
+                const view = new Uint8Array(buf);
+                for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+                return buf;
+            }
+            const xlsxBlob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+            document.getElementById('downloadXlsx').href = URL.createObjectURL(xlsxBlob);
+
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('emailForm').classList.remove('hidden');
+        }
+
+        // Load from localStorage on page load
+        const storedLeads = JSON.parse(localStorage.getItem('scrapedLeads') || '[]');
+        if (storedLeads.length > 0) {
+            scrapedLeads = storedLeads;
+            populateResults(scrapedLeads);
+        }
+
+        document.getElementById('scrapeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('emailForm').classList.add('hidden');
+            document.getElementById('statusMessage').classList.add('hidden');
+            
+            const formData = {
+                niche: document.getElementById('niche').value,
+                region: document.getElementById('region').value,
+                maxResults: parseInt(document.getElementById('maxResults').value) || 0,
+                headless: document.getElementById('headless').checked,
+                enableSocial: document.getElementById('enableSocial').checked
+            };
+            
+            try {
+                const response = await fetch(`${apiBase}/scrape`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(formData)
+                });
+                const jsonData = await response.json();
+                if (!response.ok) throw new Error(jsonData.error || 'Scraping failed');
+                
+                scrapedLeads = jsonData.data;
+                localStorage.setItem('scrapedLeads', JSON.stringify(scrapedLeads));
+                populateResults(scrapedLeads);
+            } catch (error) {
+                alert('Error during scraping: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        });
+        
+        document.getElementById('emailForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            document.getElementById('statusMessage').innerText = 'Sending emails... This may take a while.';
+            document.getElementById('statusMessage').classList.remove('hidden');
+            
+            const formData = {
+                leads: scrapedLeads, // Send leads data
+                subject: document.getElementById('subject').value,
+                body: document.getElementById('body').value
+            };
+            
+            try {
+                const response = await fetch(`${apiBase}/send-emails`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(formData)
+                });
+                const jsonData = await response.json();
+                if (!response.ok) throw new Error(jsonData.error || 'Email sending failed');
+                document.getElementById('statusMessage').innerText = `Emails sent successfully: ${jsonData.successCount} | Failed: ${jsonData.failCount}`;
+            } catch (error) {
+                document.getElementById('statusMessage').innerText = 'Error sending emails: ' + error.message;
+            }
+        });
+
+        // Clear storage button
+        document.getElementById('clearStorage').addEventListener('click', () => {
+            localStorage.removeItem('scrapedLeads');
+            scrapedLeads = [];
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('emailForm').classList.add('hidden');
+            document.getElementById('statusMessage').innerText = 'Stored data cleared.';
+            document.getElementById('statusMessage').classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>
