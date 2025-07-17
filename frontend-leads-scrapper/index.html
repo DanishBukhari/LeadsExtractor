@@ -212,7 +212,7 @@ Get a <strong>FREE and Quick Analysis</strong> of your business, website, and so
     <div id="statusMessage" class="hidden"></div>
     
     <script>
-        const apiBase = 'https://leadsextractor-d1a64c8e4e3d.herokuapp.com';
+        const apiBase = 'https://leadsextractor-d1a64c8e4e3d.herokuapp.com'; // Update to your Heroku URL
         let scrapedLeads = [];
 
         // Function to populate table and set downloads
@@ -237,7 +237,7 @@ Get a <strong>FREE and Quick Analysis</strong> of your business, website, and so
 
             // Generate CSV blob
             const header = 'BUSINESS_NAME,PHONE,EMAIL,CITY,ADDRESS,REVIEWS,WEBSITE\n';
-            const csvContent = header + leads.map(lead => `${lead.name || ''},${lead.phone || ''},${lead.email || ''},${lead.city || ''},${lead.address || ''},${lead.rating || ''},${lead.website || ''}`).join('\n');
+            const csvContent = header + leads.map(lead => `"${(lead.name || '').replace(/"/g, '""')}",${lead.phone || ''},${lead.email || ''},${lead.city || ''},"${(lead.address || '').replace(/"/g, '""')}",${lead.rating || ''},${lead.website || ''}`).join('\n');
             const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             document.getElementById('downloadCsv').href = URL.createObjectURL(csvBlob);
 
